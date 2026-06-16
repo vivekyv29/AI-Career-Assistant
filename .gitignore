@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+
+frontend/node_modules/
+frontend/dist/
+
+.env
+uploads/
+
+*.db
+*.sqlite3
+
+career_report.pdf
