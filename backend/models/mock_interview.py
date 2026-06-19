@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, TIMESTAMP
 from sqlalchemy.sql import func
-
+from database.db import SessionLocal
+from models.interview_history import InterviewHistory
 from database.base import Base
 
 class MockInterview(Base):

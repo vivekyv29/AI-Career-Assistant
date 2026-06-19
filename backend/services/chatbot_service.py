@@ -1,22 +1,14 @@
-import os
-import google.generativeai as genai
-from dotenv import load_dotenv
+import requests
 
-load_dotenv()
+def ask_ollama(prompt):
 
-genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "llama3",
+            "prompt": prompt,
+            "stream": False
+        }
+    )
 
-model = genai.GenerativeModel(
-    "gemini-2.5-flash"
-)
-
-def ask_gemini(question):
-    try:
-        response = model.generate_content(question)
-        return response.text
-
-    except Exception as e:
-        print("GEMINI ERROR:", e)
-        return "Gemini quota exceeded. Try again later."
+    return response.json()["response"]

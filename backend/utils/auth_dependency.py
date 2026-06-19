@@ -1,18 +1,15 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
+
 from utils.jwt_handler import verify_token
 
 security = HTTPBearer()
 
 def get_current_user(credentials=Depends(security)):
 
-    print("CREDENTIALS =", credentials)
-
     token = credentials.credentials
-    print("TOKEN =", token)
 
     payload = verify_token(token)
-    print("PAYLOAD =", payload)
 
     if not payload:
         raise HTTPException(

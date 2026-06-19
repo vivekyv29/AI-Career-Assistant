@@ -1,4 +1,4 @@
-from services.chatbot_service import ask_gemini
+from services.chatbot_service import ask_ollama
 
 def generate_cover_letter(
     name,
@@ -16,4 +16,4 @@ def generate_cover_letter(
     Skills: {skills}
     """
 
-    return ask_gemini(prompt)
+    return ask_ollama(prompt)

@@ -1,35 +1,97 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 
-from services.chatbot_service import ask_gemini
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import (
+    getSampleStyleSheet
+)
+
+from services.chatbot_service import ask_ollama
 
 router = APIRouter()
 
-class CoverLetterRequest(BaseModel):
-    name: str
-    job_role: str
-    skills: list[str]
 
-@router.post("/cover-letter")
+class CoverLetterRequest(BaseModel):
+    resume_text: str
+    job_description: str
+
+
+class CoverLetterPDFRequest(BaseModel):
+    cover_letter: str
+
+
+@router.post("/generate-cover-letter")
 def generate_cover_letter(
     request: CoverLetterRequest
 ):
 
     prompt = f"""
-    Write a professional cover letter.
+    You are an expert HR recruiter and professional cover letter writer.
 
-    Name: {request.name}
+    Using the resume and job description below, generate a COMPLETE professional cover letter.
 
-    Job Role: {request.job_role}
+    RESUME:
+    {request.resume_text}
 
-    Skills:
-    {", ".join(request.skills)}
+    JOB DESCRIPTION:
+    {request.job_description}
 
-    Make it professional and ATS friendly.
+    Rules:
+    1. Use the candidate's actual name from the resume.
+    2. Do NOT use placeholders like [Your Name], [Date], [Company Name].
+    3. Do NOT write instructions.
+    4. Write a real professional cover letter.
+    5. Keep it 300-400 words.
+    6. Make it ATS friendly.
+    7. Mention relevant skills and projects from the resume.
+    8. Return only the final cover letter.
     """
 
-    cover_letter = ask_gemini(prompt)
+    result = ask_ollama(prompt)
 
     return {
-        "cover_letter": cover_letter
+        "cover_letter": result
     }
+
+
+@router.post("/download-cover-letter-pdf")
+def download_cover_letter_pdf(
+    request: CoverLetterPDFRequest
+):
+
+    pdf_file = "cover_letter.pdf"
+
+    doc = SimpleDocTemplate(pdf_file)
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    for line in request.cover_letter.split("\n"):
+
+        if line.strip():
+
+            content.append(
+                Paragraph(
+                    line,
+                    styles["BodyText"]
+                )
+            )
+
+            content.append(
+                Spacer(1, 6)
+            )
+
+    doc.build(content)
+
+    return FileResponse(
+        pdf_file,
+        filename="cover_letter.pdf",
+        media_type="application/pdf"
+    )

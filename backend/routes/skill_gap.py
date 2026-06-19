@@ -1,62 +1,39 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from services.chatbot_service import ask_ollama
 
 router = APIRouter()
 
 class SkillGapRequest(BaseModel):
-    resume_skills: list
-    target_role: str
-
-ROLE_SKILLS = {
-    "AI Engineer": [
-        "Python",
-        "Machine Learning",
-        "Deep Learning",
-        "TensorFlow",
-        "PyTorch",
-        "Docker",
-        "AWS"
-    ],
-    "Data Scientist": [
-        "Python",
-        "SQL",
-        "Pandas",
-        "NumPy",
-        "Machine Learning",
-        "Statistics"
-    ]
-}
+    skills: list[str]
+    role: str
 
 @router.post("/skill-gap")
 def skill_gap(request: SkillGapRequest):
 
-    required = ROLE_SKILLS.get(
-        request.target_role,
-        []
-    )
+    prompt = f"""
+You are an expert career advisor.
 
-    matched = []
+Current Skills:
+{', '.join(request.skills)}
 
-    missing = []
+Target Career:
+{request.role}
 
-    for skill in required:
+Provide:
 
-        if skill in request.resume_skills:
-            matched.append(skill)
-        else:
-            missing.append(skill)
+1. Missing Skills
+2. Learning Priority
+3. Recommended Projects
+4. Estimated Time To Become Job Ready
 
-    score = 0
+Format clearly.
+"""
 
-    if len(required) > 0:
-        score = round(
-            len(matched) /
-            len(required) * 100,
-            2
-        )
+    result = ask_ollama(prompt)
+
+    print("OLLAMA RESULT =", result)
 
     return {
-        "matched_skills": matched,
-        "missing_skills": missing,
-        "match_percentage": score
+        "analysis": result
     }

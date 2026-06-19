@@ -1,20 +1,52 @@
+import json
+from services.chatbot_service import ask_ollama
+
 def recommend_jobs(skills):
 
-    jobs = []
+    prompt = f"""
+Based on these resume skills:
 
-    if "Python" in skills:
-        jobs.append("Python Developer")
+{', '.join(skills)}
 
-    if "Machine Learning" in skills:
-        jobs.append("Machine Learning Engineer")
+Recommend the 5 most suitable jobs.
 
-    if "Deep Learning" in skills:
-        jobs.append("AI Engineer")
+Return ONLY valid JSON.
 
-    if "NLP" in skills:
-        jobs.append("NLP Engineer")
+Example:
 
-    if "TensorFlow" in skills:
-        jobs.append("Deep Learning Engineer")
+[
+  {{
+    "role": "Machine Learning Engineer",
+    "match": 95
+  }},
+  {{
+    "role": "Data Scientist",
+    "match": 90
+  }}
+]
+"""
 
-    return jobs
+    try:
+
+        result = ask_ollama(prompt)
+
+        start = result.find("[")
+        end = result.rfind("]") + 1
+
+        if start == -1 or end == 0:
+            raise Exception("No JSON found")
+
+        jobs = json.loads(result[start:end])
+
+        return jobs
+
+    except Exception as e:
+
+        print("JOB RECOMMENDATION ERROR =", e)
+
+        return [
+            {
+                "role": "Software Engineer",
+                "match": 70
+            }
+        ]
